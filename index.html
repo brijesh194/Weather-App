@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkyCast - Premium Weather</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #74abe2, #5563de);
+      color: #fff;
+      overflow-x: hidden;
+      transition: background 1s ease;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(15px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    header h2 {
+      font-weight: 700;
+      letter-spacing: 1px;
+      font-size: 22px;
+    }
+
+    nav a {
+      margin-left: 15px;
+      text-decoration: none;
+      color: #fff;
+      font-weight: 500;
+      transition: color 0.3s;
+      font-size: 16px;
+    }
+
+    nav a:hover {
+      color: #ffd700;
+    }
+
+    .hero {
+      height: 85vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      padding: 0 15px;
+    }
+
+    .hero h1 {
+      font-size: 42px;
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+
+    .hero p {
+      font-size: 16px;
+      opacity: 0.9;
+      margin-bottom: 20px;
+    }
+
+    .hero input,
+    .hero button {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 25px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .hero input {
+      width: 200px;
+      margin-bottom: 10px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      text-align: center;
+    }
+
+    .hero input::placeholder {
+      color: #eee;
+    }
+
+    .hero button {
+      background: linear-gradient(45deg, #00c6ff, #007bff);
+      margin-top: 10px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .hero button:hover {
+      transform: translateY(-2px);
+      background: linear-gradient(45deg, #007bff, #00c6ff);
+    }
+
+    .popup-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(5px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      animation: fadeInBg 0.5s ease;
+      padding: 10px;
+    }
+
+    @keyframes fadeInBg {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .weather-container {
+      max-width: 600px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 30px 20px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(20px);
+      animation: popupZoom 0.4s ease;
+      position: relative;
+    }
+
+    @keyframes popupZoom {
+      from { transform: scale(0.7); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .sunny { background: linear-gradient(135deg, #fceabb, #f8b500); }
+    .cloudy { background: linear-gradient(135deg, #89f7fe, #66a6ff); }
+    .rainy { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+    .night { background: linear-gradient(135deg, #232526, #414345); }
+
+    #weather-icon {
+      width: 100px;
+      animation: float 3s ease-in-out infinite;
+      display: none;
+      margin: 15px auto;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .city { font-size: 24px; font-weight: 600; margin-top: 10px; }
+    .temp { font-size: 60px; font-weight: 700; margin: 5px 0; }
+    .description { font-size: 20px; text-transform: capitalize; }
+
+    #loading {
+      display: none;
+      border: 5px solid rgba(255, 255, 255, 0.3);
+      border-top: 5px solid white;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      margin: 15px auto;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #error-message {
+      color: #ff6b6b;
+      font-size: 16px;
+      display: none;
+      margin-top: 10px;
+    }
+
+    .close-btn {
+      background: rgba(255, 255, 255, 0.3);
+      border: none;
+      color: white;
+      font-size: 20px;
+      padding: 8px 15px;
+      border-radius: 8px;
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .close-btn:hover { background: rgba(255, 255, 255, 0.5); }
+
+    .forecast {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .day-card {
+      flex: 1;
+      min-width: 90px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      padding: 8px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      transition: transform 0.3s;
+    }
+
+    .day-card:hover { transform: translateY(-5px); }
+    .day-card img { width: 40px; }
+    .day-card h4 { font-size: 14px; margin-bottom: 4px; }
+    .day-card p { font-size: 12px; margin: 2px 0; }
+
+    .cloud { position: absolute; top: 20%; left: -200px; width: 200px; height: 60px; background: #fff; border-radius: 50px; opacity: 0.7; animation: cloudMove 60s linear infinite; }
+    @keyframes cloudMove { from { left: -200px; } to { left: 110%; } }
+
+    .sun { position: absolute; top: 10%; right: 10%; width: 80px; height: 80px; background: radial-gradient(circle, #ffdd00, #fbb034); border-radius: 50%; box-shadow: 0 0 25px #fbb034; animation: pulse 3s infinite ease-in-out; }
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+    footer { background: rgba(0,0,0,0.3); text-align: center; padding: 15px; font-size: 14px; color: #eee; backdrop-filter: blur(15px); }
+
+    footer a { color: #00c6ff; text-decoration: none; }
+
+    /* MOBILE RESPONSIVE */
+    @media (max-width: 768px) {
+      header { flex-direction: column; padding: 10px 15px; }
+      nav { margin-top: 10px; }
+      nav a { margin-left: 10px; font-size: 14px; }
+      .hero h1 { font-size: 32px; }
+      .hero p { font-size: 14px; }
+      .hero input { width: 150px; margin-bottom: 8px; }
+      .hero button { font-size: 14px; padding: 10px 16px; }
+      .city { font-size: 20px; }
+      .temp { font-size: 50px; }
+      .description { font-size: 16px; }
+      #weather-icon { width: 80px; }
+      .day-card { min-width: 70px; padding: 6px; }
+      .day-card img { width: 30px; }
+      .day-card h4 { font-size: 12px; }
+      .day-card p { font-size: 11px; }
+      .close-btn { top: 10px; right: 10px; font-size: 18px; padding: 6px 12px; }
+    }
+    .local-time {
+  font-size: 18px;
+  margin: 5px 0 15px 0;
+  font-weight: 500;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+.weather-details p {
+  font-size: 16px;
+  margin: 4px 0;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+
+  </style>
+</head>
+<body>
+  <header>
+    <h2>🌤️ SkyCast</h2>
+    <nav>
+      <a href="#">Home</a>
+      <a href="#">Forecast</a>
+      <a href="#">About</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="sun"></div>
+    <div class="cloud"></div>
+    <div class="cloud" style="top:40%; animation-delay:15s; opacity:0.5;"></div>
+    <h1>Check Live Weather Instantly</h1>
+    <p>Accurate weather updates for your city – Anytime, Anywhere!</p>
+    <input type="text" id="city" placeholder="Enter city name" />
+    <button onclick="getWeather()">Search</button>
+  </section>
+
+  <div class="popup-bg" id="popup-bg">
+    <div class="weather-container" id="weather-container">
+      <button class="close-btn" onclick="closePopup()">✕</button>
+      <div id="loading"></div>
+      <img id="weather-icon" src="" alt="" />
+      <div class="city" id="city-name"></div>
+      <!-- Add inside weather-container, city ke niche -->
+      <div class="local-time" id="local-time"></div>
+
+      <div class="weather-details" id="weather-details" style="margin-top:15px; display:none; text-align:left;">
+  <p>Humidity: <span id="humidity"></span>%</p>
+  <p>Wind Speed: <span id="wind"></span> m/s</p>
+  <p>Pressure: <span id="pressure"></span> hPa</p>
+  <p>Feels Like: <span id="feels-like"></span>°C</p>
+</div>
+
+
+      <div class="temp" id="temperature"></div>
+      <div class="description" id="weather-description"></div>
+      <div id="error-message"></div>
+      <div class="forecast" id="forecast"></div>
+    </div>
+  </div>
+
+  <footer>
+    © 2025 <b>SkyCast</b>. Designed with ❤️ by Brijesh.
+  </footer>
+
+  <script>
+    const apiKey = "77947dd13f6218f18f26e177245f9fca";
+
+    function getWeather() {
+      const city = document.getElementById("city").value.trim();
+      const loading = document.getElementById("loading");
+      const icon = document.getElementById("weather-icon");
+      const errorMessage = document.getElementById("error-message");
+      const container = document.getElementById("weather-container");
+      const popup = document.getElementById("popup-bg");
+      const forecastContainer = document.getElementById("forecast");
+      
+
+      if (!city) {
+        showError("Please enter a city name.");
+        return;
+      }
+
+      popup.style.display = "flex";
+      container.className = "weather-container";
+      loading.style.display = "block";
+      errorMessage.style.display = "none";
+      icon.style.display = "none";
+      forecastContainer.innerHTML = "";
+
+      fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          loading.style.display = "none";
+
+          if (data.cod === "404") {
+            showError("City not found!");
+            clearWeather();
+            return;
+          }
+
+          document.getElementById("city-name").textContent = data.name;
+          document.getElementById(
+            "temperature"
+          ).textContent = `${Math.round(data.main.temp)}°C`;
+          document.getElementById("weather-description").textContent =
+            data.weather[0].description;
+
+            // Real-time clock & date
+function updateLocalTime(timezoneOffset) {
+  const localTimeDiv = document.getElementById("local-time");
+  setInterval(() => {
+    const nowUTC = new Date(new Date().getTime() + new Date().getTimezoneOffset() * 60000);
+    const localTime = new Date(nowUTC.getTime() + timezoneOffset * 1000);
+    const hours = localTime.getHours().toString().padStart(2, '0');
+    const minutes = localTime.getMinutes().toString().padStart(2, '0');
+    const seconds = localTime.getSeconds().toString().padStart(2, '0');
+    const day = localTime.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+    localTimeDiv.textContent = `${day} | ${hours}:${minutes}:${seconds}`;
+  }, 1000);
+}
+
+// timezone offset in seconds
+updateLocalTime(data.timezone);
+
+          const iconCode = data.weather[0].icon;
+          icon.src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+          icon.style.display = "block";
+
+          const weatherMain = data.weather[0].main.toLowerCase();
+          container.className = "weather-container";
+          if (weatherMain.includes("cloud")) container.classList.add("cloudy");
+          else if (weatherMain.includes("rain"))
+            container.classList.add("rainy");
+          else if (weatherMain.includes("clear"))
+            container.classList.add("sunny");
+          else if (weatherMain.includes("night"))
+            container.classList.add("night");
+          else container.classList.add("cloudy");
+
+          getForecast(city);
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          loading.style.display = "none";
+          showError("Error fetching weather data!");
+        });
+    }
+
+    function getForecast(city) {
+      const forecastContainer = document.getElementById("forecast");
+
+      fetch(
+        `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          const dailyData = {};
+          data.list.forEach((item) => {
+            const date = item.dt_txt.split(" ")[0];
+            if (!dailyData[date]) {
+              dailyData[date] = {
+                temp: item.main.temp,
+                icon: item.weather[0].icon,
+                description: item.weather[0].main,
+              };
+            }
+          });
+
+          const days = Object.keys(dailyData).slice(0, 5);
+          days.forEach((date) => {
+            const day = new Date(date).toLocaleDateString("en-US", {
+              weekday: "short",
+            });
+            const { temp, icon, description } = dailyData[date];
+
+            const card = document.createElement("div");
+            card.classList.add("day-card");
+            card.innerHTML = `
+              <h4>${day}</h4>
+              <img src="https://openweathermap.org/img/wn/${icon}.png" alt="">
+              <p>${Math.round(temp)}°C</p>
+              <p>${description}</p>
+            `;
+            forecastContainer.appendChild(card);
+          });
+        })
+        .catch((error) => console.error("Forecast Error:", error));
+    }
+
+    function closePopup() {
+      const popup = document.getElementById("popup-bg");
+      popup.style.animation = "fadeOutBg 0.5s ease";
+      setTimeout(() => (popup.style.display = "none"), 400);
+    }
+
+    function showError(msg) {
+      const errorMessage = document.getElementById("error-message");
+      errorMessage.textContent = msg;
+      errorMessage.style.display = "block";
+    }
+
+    function clearWeather() {
+      document.getElementById("city-name").textContent = "";
+      document.getElementById("temperature").textContent = "";
+      document.getElementById("weather-description").textContent = "";
+      document.getElementById("weather-icon").style.display = "none";
+      document.getElementById("forecast").innerHTML = "";
+    }
+  </script>
+</body>
+</html>
